@@ -2,7 +2,7 @@ services:
   # Backend Web Service running FastAPI (Docker)
   - type: web
     name: url-fishing-backend
-    env: docker
+    runtime: docker
     plan: free
     dockerContext: backend
     dockerfilePath: backend/Dockerfile
@@ -11,11 +11,11 @@ services:
         value: 8000
 
   # Frontend Static Site running React
-  - type: static
+  - type: web
     name: url-fishing-frontend
-    env: static
+    runtime: static
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: ./dist
     rootDir: frontend
     envVars:
       - key: VITE_API_URL
@@ -23,3 +23,7 @@ services:
           name: url-fishing-backend
           type: web
           property: url
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
