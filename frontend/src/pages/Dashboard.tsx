@@ -5,7 +5,8 @@ import axios from 'axios';
 import { cn } from '../lib/utils';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 
-const API_URL = 'http://localhost:8000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = `${API_BASE}/api`;
 
 interface ScanResult {
   url: string;
