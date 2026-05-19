@@ -135,6 +135,23 @@ def get_stats(db: Session = Depends(get_db)):
         "detection_rate": round((phishing_count / total_scans * 100) if total_scans > 0 else 0, 1)
     }
 
+# Serve frontend static files
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+frontend_dist_path = os.path.join(os.path.dirname(__file__), "dist")
+if os.path.exists(frontend_dist_path):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist_path, "assets")), name="static")
+
+    @app.get("/{catchall:path}")
+    def read_index(catchall: str):
+        if catchall.startswith("api"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        index_file = os.path.join(frontend_dist_path, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        raise HTTPException(status_code=404, detail="Frontend index.html not found")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

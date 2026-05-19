@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ShieldCheck, ShieldAlert, AlertTriangle, ExternalLink, Calendar } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin);
 const API_URL = `${API_BASE}/api`;
 
 interface HistoryItem {
