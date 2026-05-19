@@ -7,15 +7,18 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } 
 
 const API_URL = 'http://localhost:8000/api';
 
+interface ScanResult {
+  url: string;
+  verdict: string;
+  confidence_score: number;
+  features: Record<string, number>;
+}
+
 export default function Dashboard() {
   const [url, setUrl] = useState('');
   const [isScanning, setIsScanning] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<ScanResult | null>(null);
   const [stats, setStats] = useState({ total: 0, safe: 0, phishing: 0, suspicious: 0 });
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
 
   const fetchStats = async () => {
     try {
@@ -27,9 +30,14 @@ export default function Dashboard() {
         suspicious: res.data.suspicious_urls,
       });
     } catch (e) {
-      console.error("Failed to fetch stats");
+      console.error("Failed to fetch stats", e);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchStats();
+  }, []);
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +171,7 @@ export default function Dashboard() {
                 <div className="pt-4 border-t border-cyber-border/50">
                   <h4 className="text-sm font-medium text-cyber-muted mb-3">Key Features Detected:</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {Object.entries(result.features).slice(0, 6).map(([key, val]: any) => (
+                    {Object.entries(result.features).slice(0, 6).map(([key, val]) => (
                       <div key={key} className="bg-cyber-dark p-3 rounded border border-cyber-border/50 flex justify-between items-center">
                         <span className="text-xs text-cyber-muted truncate" title={key}>{key.replace('count_', '').replace('is_', '').replace('_', ' ')}</span>
                         <span className="text-cyber-neon font-mono text-sm">{val}</span>

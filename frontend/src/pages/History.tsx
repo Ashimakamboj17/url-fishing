@@ -18,10 +18,6 @@ export default function History() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
   const fetchHistory = async () => {
     try {
       const res = await axios.get(`${API_URL}/history?limit=100`);
@@ -32,6 +28,11 @@ export default function History() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchHistory();
+  }, []);
 
   const getVerdictIcon = (verdict: string) => {
     switch (verdict) {
