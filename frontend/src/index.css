@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+@layer base {
+  body {
+    @apply bg-cyber-dark text-cyber-text font-sans antialiased;
+  }
+}
+
+.glass-panel {
+  @apply bg-cyber-card/80 backdrop-blur-md border border-cyber-border rounded-xl shadow-2xl;
+}
+
+.input-cyber {
+  @apply w-full bg-cyber-darker border border-cyber-border rounded-lg px-4 py-3 text-cyber-text focus:outline-none focus:border-cyber-neon focus:ring-1 focus:ring-cyber-neon transition-all duration-300;
+}
+
+.btn-primary {
+  @apply bg-cyber-neon/10 text-cyber-neon border border-cyber-neon/50 hover:bg-cyber-neon hover:text-cyber-darker px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-[0_0_15px_rgba(0,240,255,0.2)] hover:shadow-[0_0_25px_rgba(0,240,255,0.6)];
+}
+
+.btn-secondary {
+  @apply bg-cyber-card text-cyber-text border border-cyber-border hover:border-cyber-muted px-6 py-3 rounded-lg font-medium transition-all duration-300;
+}
+
+/* Custom Scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-cyber-darker;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-cyber-border rounded-full hover:bg-cyber-muted;
+}

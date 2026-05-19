@@ -1,0 +1,140 @@
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, HttpUrl
+from sqlalchemy.orm import Session
+from typing import List
+import joblib
+import os
+import numpy as np
+import pandas as pd
+
+import models
+from database import engine, get_db
+from ml.features import extract_features, get_feature_names
+
+models.Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="PhishGuard API")
+
+# Configure CORS for React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify exact domains
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Load the trained model
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "ml", "model.joblib")
+try:
+    model = joblib.load(MODEL_PATH)
+except Exception as e:
+    print(f"Warning: Model not found at {MODEL_PATH}. Run train.py first.")
+    model = None
+
+class ScanRequest(BaseModel):
+    url: str
+
+class BatchScanRequest(BaseModel):
+    urls: List[str]
+
+class ScanResult(BaseModel):
+    url: str
+    verdict: str
+    confidence_score: float
+    features: dict
+
+def analyze_url(url: str) -> ScanResult:
+    # 1. Extract features
+    features_dict = extract_features(url)
+    
+    # Check if model is loaded
+    if not model:
+        raise HTTPException(status_code=500, detail="ML model is not loaded. Please train the model.")
+
+    # 2. Prepare data for model prediction
+    feature_names = get_feature_names()
+    # Ensure correct order
+    feature_values = [features_dict.get(fname, 0) for fname in feature_names]
+    
+    # 3. Predict
+    # Scikit-learn expects 2D array
+    X = pd.DataFrame([feature_values], columns=feature_names)
+    
+    # Probabilities: [prob_safe, prob_phishing]
+    probabilities = model.predict_proba(X)[0]
+    prob_phishing = probabilities[1]
+    
+    # Determine verdict and confidence
+    confidence_score = prob_phishing * 100
+    if confidence_score > 70:
+        verdict = "Phishing"
+    elif confidence_score > 30:
+        verdict = "Suspicious"
+    else:
+        verdict = "Safe"
+        
+    return ScanResult(
+        url=url,
+        verdict=verdict,
+        confidence_score=round(confidence_score, 2),
+        features=features_dict
+    )
+
+@app.post("/api/scan", response_model=ScanResult)
+def scan_url(request: ScanRequest, db: Session = Depends(get_db)):
+    result = analyze_url(request.url)
+    
+    # Save to history
+    db_scan = models.ScanHistory(
+        url=result.url,
+        verdict=result.verdict,
+        confidence_score=result.confidence_score
+    )
+    db.add(db_scan)
+    db.commit()
+    db.refresh(db_scan)
+    
+    return result
+
+@app.post("/api/batch-scan", response_model=List[ScanResult])
+def batch_scan_urls(request: BatchScanRequest, db: Session = Depends(get_db)):
+    results = []
+    for url in request.urls:
+        result = analyze_url(url)
+        results.append(result)
+        
+        db_scan = models.ScanHistory(
+            url=result.url,
+            verdict=result.verdict,
+            confidence_score=result.confidence_score
+        )
+        db.add(db_scan)
+    
+    db.commit()
+    return results
+
+@app.get("/api/history")
+def get_history(limit: int = 50, db: Session = Depends(get_db)):
+    scans = db.query(models.ScanHistory).order_by(models.ScanHistory.scan_date.desc()).limit(limit).all()
+    return scans
+
+@app.get("/api/stats")
+def get_stats(db: Session = Depends(get_db)):
+    total_scans = db.query(models.ScanHistory).count()
+    phishing_count = db.query(models.ScanHistory).filter(models.ScanHistory.verdict == "Phishing").count()
+    safe_count = db.query(models.ScanHistory).filter(models.ScanHistory.verdict == "Safe").count()
+    suspicious_count = db.query(models.ScanHistory).filter(models.ScanHistory.verdict == "Suspicious").count()
+    
+    return {
+        "total_scans": total_scans,
+        "phishing_detected": phishing_count,
+        "safe_urls": safe_count,
+        "suspicious_urls": suspicious_count,
+        "detection_rate": round((phishing_count / total_scans * 100) if total_scans > 0 else 0, 1)
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
