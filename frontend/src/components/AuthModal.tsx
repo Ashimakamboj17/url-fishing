@@ -125,7 +125,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-cyber-muted uppercase tracking-wider">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3.5 w-5 h-5 text-cyber-muted" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyber-muted pointer-events-none" />
               <input
                 type="email"
                 required
@@ -140,7 +140,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-cyber-muted uppercase tracking-wider">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3.5 w-5 h-5 text-cyber-muted" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyber-muted pointer-events-none" />
               <input
                 type="password"
                 required
@@ -156,7 +156,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-cyber-muted uppercase tracking-wider">Confirm Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3.5 w-5 h-5 text-cyber-muted" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-cyber-muted pointer-events-none" />
                 <input
                   type="password"
                   required
