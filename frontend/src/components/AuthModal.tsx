@@ -132,7 +132,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 placeholder="operator@phishguard.sec"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-cyber pl-10"
+                className="input-cyber !pl-12"
               />
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-cyber pl-10 font-mono"
+                className="input-cyber !pl-12 font-mono"
               />
             </div>
           </div>
@@ -163,7 +163,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   placeholder="••••••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="input-cyber pl-10 font-mono"
+                  className="input-cyber !pl-12 font-mono"
                 />
               </div>
             </div>
