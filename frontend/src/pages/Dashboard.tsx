@@ -4,6 +4,8 @@ import { Search, ShieldAlert, ShieldCheck, AlertTriangle, Loader2 } from 'lucide
 import axios from 'axios';
 import { cn } from '../lib/utils';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
+import { useNotifications } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin);
 const API_URL = `${API_BASE}/api`;
@@ -16,6 +18,8 @@ interface ScanResult {
 }
 
 export default function Dashboard() {
+  const { addNotification } = useNotifications();
+  const { user } = useAuth();
   const [url, setUrl] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
@@ -36,9 +40,8 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStats();
-  }, []);
+  }, [user]);
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,14 +52,27 @@ export default function Dashboard() {
     
     try {
       const res = await axios.post(`${API_URL}/scan`, { url });
-      setResult(res.data);
+      const scanResult = res.data;
+      setResult(scanResult);
+      
+      // Dynamic Threat Notifications
+      if (scanResult.verdict === 'Phishing') {
+        addNotification('danger', `Critical threat detected: Scan of ${scanResult.url} resulted in Phishing (confidence: ${scanResult.confidence_score}%).`);
+      } else if (scanResult.verdict === 'Suspicious') {
+        addNotification('warning', `Suspicious activity: URL ${scanResult.url} flagged as Suspicious (confidence: ${scanResult.confidence_score}%).`);
+      } else {
+        addNotification('info', `Safe URL scanned: ${scanResult.url} cleared of threats.`);
+      }
+      
       fetchStats(); // Update stats after scan
     } catch (error) {
       console.error("Scanning failed", error);
+      addNotification('warning', `Scan execution failed for ${url}. Make sure API is online.`);
     } finally {
       setIsScanning(false);
     }
   };
+
 
   const getVerdictColor = (verdict: string) => {
     switch (verdict) {
